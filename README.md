@@ -1,5 +1,5 @@
 # OUI Library
-Library and microservice for looking up manufacturers from MAC addresses.
+Library and microservice for looking up manufacturers from MAC addresses, written in [Go](http://golang.org).
 
 This library is a in-memory database that allows to look up manufacturer information based on a MAC address. The library is very lightweight, and allows for million of lookups per second. You can add the database by specifying a file or a URL where the data can be downloaded from. The server support non-interuptible updates and can update the database while the server is running.
 
