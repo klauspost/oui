@@ -113,13 +113,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			c.Errorf(err.Error())
 		}
-		w.Header().Set("Cache-Control", "public, max-age=86400") // 86400 = 24*60*60
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Expires", UpdateAt.Format(http.TimeFormat))
-		w.Header().Set("Last-Modified", db.Generated().Format(http.TimeFormat))
 		w.Write(j)
 	}()
+
+	// Set headers
+	w.Header().Set("Cache-Control", "public, max-age=86400") // 86400 = 24*60*60
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Expires", UpdateAt.Format(http.TimeFormat))
+	w.Header().Set("Last-Modified", db.Generated().Format(http.TimeFormat))
 
 	mac = r.URL.Query().Get("mac")
 	if mac == "" {
