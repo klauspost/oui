@@ -85,12 +85,12 @@ func ParseMac(mac string) (*HardwareAddr, error) {
 			break
 		}
 		if len(p) != 2 {
-			return nil, ErrInvalidMac{Reason: fmt.Sprintf("Address element %d (%s) is not 2 characters", i, p), Mac: mac}
+			return nil, ErrInvalidMac{Reason: fmt.Sprintf("Address element %d (%s) is not 2 characters", i+1, p), Mac: mac}
 		}
 		var b byte
 		n, err := fmt.Sscanf(p, "%x", &b)
 		if n != 1 {
-			return nil, ErrInvalidMac{Reason: fmt.Sprintf("Address element %d (%s) cannot be parsed as hex value: %v", i, p, err), Mac: mac}
+			return nil, ErrInvalidMac{Reason: fmt.Sprintf("Address element %d (%s) cannot be parsed as hex value: %v", i+1, p, err), Mac: mac}
 		}
 		hw[i] = b
 	}
