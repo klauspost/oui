@@ -51,8 +51,7 @@ func (db ouiDB) del(hw HardwareAddr) {
 }
 
 // This interface can be used to access the raw
-// database. This interface is implemented on databases
-// that are not marked as dynamic when loaded.
+// database. This interface is available on Static databases.
 type RawGetter interface {
 	RawDB() map[[3]byte]Entry
 }
@@ -80,11 +79,18 @@ type OuiDB interface {
 	generatedAt(*time.Time)
 }
 
+// StaticDB is a database containing OUI entries that doesn't
+// allow updates, but on the other hand allows access to the
+// underlying data structure.
+// See the OuiDB interface for query functions.
 type StaticDB interface {
 	OuiDB
 	RawGetter
 }
 
+// DynamicDB is a database containing OUI entries that
+// can be safely updated while queries are running.
+// See the OuiDB interface for query functions.
 type DynamicDB interface {
 	OuiDB
 	Updater
@@ -232,8 +238,7 @@ func (o *updateableDB) DeleteEntry(hw HardwareAddr) {
 	o.mu.Unlock()
 }
 
-// The Updater interface will be satisfied if the database was opened
-// with the dynamic field set to true.
+// The Updater interface will be satisfied if the database was opened as a dynamic database.
 // This can be used to safely update the database, even while queries are running.
 type Updater interface {
 	// UpdateEntry will update/add a single entry to the database.
