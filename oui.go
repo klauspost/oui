@@ -39,19 +39,6 @@ import (
 // Internal representation of the database content
 type ouiDb map[[3]byte]Entry
 
-type dbTime time.Time
-
-func (d dbTime) Generated() time.Time {
-	return time.Time(d)
-}
-
-func (d *dbTime) generatedAt(t *time.Time) {
-	if t == nil {
-		return
-	}
-	*d = dbTime(*t)
-}
-
 // Set an element to contain this value
 func (db ouiDb) set(hw HardwareAddr, e Entry) {
 	db[[3]byte(hw)] = e
@@ -116,7 +103,7 @@ func newStatic(c map[[3]byte]Entry) OuiDb {
 // A static database
 type staticDB struct {
 	ouiDb
-	dbTime
+	dbTime time.Time
 }
 
 // Check we implement the interfaces we promise
@@ -148,12 +135,25 @@ func (o staticDB) LookUp(hw HardwareAddr) (*Entry, error) {
 	return &e, nil
 }
 
+// Get the generated time
+func (o staticDB) Generated() time.Time {
+	return time.Time(o.dbTime)
+}
+
+// Update "generated at" time
+func (d *staticDB) generatedAt(t *time.Time) {
+	if t == nil {
+		return
+	}
+	d.dbTime = *t
+}
+
 // An updateable database.
 // There is a mutex protecting read/write access to the database.
 type updateableDB struct {
 	ouiDb
-	dbTime
-	mu sync.RWMutex
+	dbTime time.Time
+	mu     sync.RWMutex
 }
 
 // Check we implement the interfaces we promise
@@ -180,6 +180,23 @@ func (o *updateableDB) LookUp(hw HardwareAddr) (*Entry, error) {
 		return nil, ErrNotFound
 	}
 	return &e, nil
+}
+
+// Get the generated time
+func (o *updateableDB) Generated() time.Time {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+	return o.dbTime
+}
+
+// Update "generated at" time
+func (o *updateableDB) generatedAt(t *time.Time) {
+	if t == nil {
+		return
+	}
+	o.mu.Lock()
+	o.dbTime = *t
+	o.mu.Unlock()
 }
 
 // Update the database and replace content with the supplied content.
