@@ -3,4 +3,4 @@ MAINTAINER Klaus Post <klauspost@gmail.com>
 
 EXPOSE 5000
 
-CMD ["app", "-open=\"http\"", "-update-every=\"@daily\""]
+CMD ["app", "-open=http", "-update-every=@daily"]
