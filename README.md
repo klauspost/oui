@@ -75,7 +75,7 @@ There are several advanced features, that allow you to specify the MAC address a
 This method requires a [Go installation](https://golang.org/doc/install).
 
 ```
-go get github.com/klauspost/oui
+go get github.com/klauspost/oui/ouiserver/...
 go install github.com/klauspost/oui/ouiserver
 ```
 
