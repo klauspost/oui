@@ -17,6 +17,7 @@ var ouiFile = flag.String("open", "oui.txt", "File name with oui.txt to open. Se
 var listen = flag.String("listen", ":5000", "Listen address and port, for instance 127.0.0.1:5000")
 var threads = flag.Int("threads", runtime.NumCPU(), "Number of threads to use. Defaults to number of detected cores")
 var pretty = flag.Bool("pretty", false, "Should output be formatted with newlines and intentation")
+var originPolicy = flag.String("origin", "*", "Value sent in the Access-Control-Allow-Origin header.")
 var update = flag.String("update-every", "", "Duration between reloading the database as 'cronexpr'. Examples are '@weekly', '@monthly'.")
 
 //go:generate: ffjson -nodecoder $(GOFILE)
@@ -114,6 +115,14 @@ func main() {
 			w.Write(j)
 		}()
 
+		// Set headers
+		if *originPolicy != "" {
+			w.Header().Set("Access-Control-Allow-Origin", *originPolicy)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Last-Modified", db.Generated().Format(http.TimeFormat))
+
+		// Find Mac
 		mac = req.URL.Query().Get("mac")
 		if mac == "" {
 			mac = strings.Trim(req.URL.Path, "/")
