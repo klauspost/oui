@@ -76,6 +76,10 @@ var ErrNotFound = errors.New("not found")
 
 // OuiDb represents a database that allow you to look up Hardware Addresses
 type OuiDb interface {
+	// Query the database for an entry based on the mac address
+	// If none are found ErrNotFound will be returned.
+	Query(string) (*Entry, error)
+
 	// Look up a hardware address and return the entry if any are found.
 	// If none are found ErrNotFound will be returned.
 	LookUp(HardwareAddr) (*Entry, error)
@@ -124,6 +128,16 @@ func (db staticDB) RawDB() map[[3]byte]Entry {
 	return db.ouiDb
 }
 
+// Query the database for an entry based on the mac address
+// If none are found ErrNotFound will be returned.
+func (db staticDB) Query(mac string) (*Entry, error) {
+	hw, err := ParseMac(mac)
+	if err != nil {
+		return nil, err
+	}
+	return db.LookUp(*hw)
+}
+
 // LookUp a hardware address and return the entry if any are found.
 // If none are found ErrNotFound will be returned.
 func (o staticDB) LookUp(hw HardwareAddr) (*Entry, error) {
@@ -145,6 +159,16 @@ type updateableDB struct {
 // Check we implement the interfaces we promise
 var _ Updater = &updateableDB{}
 var _ OuiDb = &updateableDB{}
+
+// Query the database for an entry based on the mac address
+// If none are found ErrNotFound will be returned.
+func (db *updateableDB) Query(mac string) (*Entry, error) {
+	hw, err := ParseMac(mac)
+	if err != nil {
+		return nil, err
+	}
+	return db.LookUp(*hw)
+}
 
 // Look up a hardware address and return the entry if any are found.
 // If none are found ErrNotFound will be returned.
@@ -326,7 +350,6 @@ func OpenHttp(url string, updateable bool) (OuiDb, error) {
 // This error will be returned if you attempt to update a database,
 // where you didn't specify it as updateable.
 var ErrNotUpdateable = errors.New("database not updateable")
-
 
 // Update will read and replace the content of the database.
 // The database will remain usable while the update/parsing
