@@ -36,8 +36,8 @@ This shows the basic usage if the library. Opening a database and querying.
 import "github.com/klauspost/oui"
 
 func main() {
-    // Load the database from "oui.txt", we don't need an updateable database.
-	db, err = oui.OpenFile("oui.txt", false)
+    // Load the content from "oui.txt" into a static database
+	db, err = oui.OpenStaticFile("oui.txt")
 
 	// Query a mac address
 	entry, err := db.Query("D0-DF-9A-D8-44-4B")
@@ -52,8 +52,8 @@ When you initially load the database, you can specify that you want to be able t
 import "github.com/klauspost/oui"
 
 func main() {
-	// Load the database from "oui.txt", we want an updateable database.
-	db, err = oui.OpenFile("oui.txt", true)
+	// Load the database from "oui.txt" into an updateable database.
+	db, err = oui.OpenFile("oui.txt")
 
 	go func() {
 		for {
