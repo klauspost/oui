@@ -1,2 +1,3 @@
 language: go
 
+before_install: rm -rf appengine
