@@ -1,5 +1,5 @@
 # OUI Library
-Library for looking up manufacturers from MAC addresses.
+Library and microservice for looking up manufacturers from MAC addresses, written in [Go](http://golang.org).
 
 This library is a in-memory database that allows to look up manufacturer information based on a MAC address. The library is very lightweight, and allows for million of lookups per second. You can add the database by specifying a file or a URL where the data can be downloaded from. The server support non-interuptible updates and can update the database while the server is running.
 
@@ -24,7 +24,7 @@ Download OUI database: http://standards.ieee.org/develop/regauth/oui/public.html
 [3]: https://travis-ci.org/klauspost/oui.svg
 [4]: https://travis-ci.org/klauspost/oui
 
-[Godoc reference](https://godoc.org/github.com/klauspost/oui).
+Click here for [Godoc reference](https://godoc.org/github.com/klauspost/oui), or see below for usage examples.
 
 # Usage
 
@@ -45,7 +45,7 @@ func main() {
 	// If error is nil, we have a result in "entry"
 }
 ```
-Note hat only the `D0-DF-9A` part of the MAC address is used. The parser is flexible, and will allow colons instead of dashes, or even no separator at all, so these strings will return the same results: `D0-DF-9A`, `D0:DF:9A` & `D0DF9A`. The only thing to note is that you cannot omit zeros, so `00-00-00` must be fully filled.
+Note that only the `D0-DF-9A` part of the MAC address is used. The parser is flexible, and will allow colons instead of dashes, or even no separator at all, so these strings will return the same results: `D0-DF-9A`, `D0:DF:9A` & `D0DF9A`. The only thing to note is that you cannot omit zeros, so `00-00-00` must be fully filled.
 
 When you initially load the database, you can specify that you want to be able to update it. Therefore this is safe:
 ```Go
@@ -75,7 +75,7 @@ There are several advanced features, that allow you to specify the MAC address a
 This method requires a [Go installation](https://golang.org/doc/install).
 
 ```
-go get github.com/klauspost/oui
+go get github.com/klauspost/oui/ouiserver/...
 go install github.com/klauspost/oui/ouiserver
 ```
 
@@ -86,7 +86,7 @@ This should build a "ouiserver" executable in your gopath.
 Usage of ouiserver:
   -listen=":5000": Listen address and port, for instance 127.0.0.1:5000
   -open="oui.txt": File name with oui.txt to open. Set to 'http' to download
-  -origin="*": Value sent in the Access-Control-Allow-Origin header.
+  -origin="*": Value sent in the "Access-Control-Allow-Origin" header.
   -pretty: Will output be formatted with newlines and intentation
   -threads=4: Number of threads to use. Defaults to number of detected cores
   -update-every="": Duration between reloading the database as 'cronexpr'. 
@@ -130,6 +130,12 @@ If any error occurs you will get a status 400 with an error message, for instanc
 }
 ```
 The time specified in the database as the generation time is sent as "Last-Modified" header. 
+
+## Appengine
+
+A special version of the server has been built for app-engine. It can be found in the `appengine` folder.
+
+This version operates entirely from memory, and updates itself every 24 hours. To see a live running version of it you can go here: http://mac-oui.appspot.com/00-00-00
 
 
 # License
