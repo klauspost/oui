@@ -37,7 +37,7 @@ func main() {
 		cron = cronexpr.MustParse(*update)
 	}
 
-	var db oui.OuiDb
+	var db oui.DynamicDB
 	url := ""
 	fileName := ""
 	var err error
@@ -48,14 +48,14 @@ func main() {
 			url = "http://standards-oui.ieee.org/oui.txt"
 		}
 		log.Println("Downloading new Db from: " + url)
-		db, err = oui.OpenHttp(url, cron != nil)
+		db, err = oui.OpenHttp(url)
 		if err != nil {
 			log.Fatalf("Error downloading:%s", err.Error())
 		}
 	} else {
 		fileName = *ouiFile
 		log.Println("Opening database from: " + fileName)
-		db, err = oui.OpenFile(fileName, cron != nil)
+		db, err = oui.OpenFile(fileName)
 		if err != nil {
 			log.Fatalf("Error updating file:%s", err.Error())
 		}

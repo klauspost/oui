@@ -37,16 +37,16 @@ import (
 )
 
 // Internal representation of the database content
-type ouiDb map[[3]byte]Entry
+type ouiDB map[[3]byte]Entry
 
 // Set an element to contain this value
-func (db ouiDb) set(hw HardwareAddr, e Entry) {
+func (db ouiDB) set(hw HardwareAddr, e Entry) {
 	db[[3]byte(hw)] = e
 }
 
 // Delete an element. If the element does not exist,
 // the function will just return.
-func (db ouiDb) del(hw HardwareAddr) {
+func (db ouiDB) del(hw HardwareAddr) {
 	delete(db, [3]byte(hw))
 }
 
@@ -61,8 +61,8 @@ type RawGetter interface {
 // to find the entry in the database.
 var ErrNotFound = errors.New("not found")
 
-// OuiDb represents a database that allow you to look up Hardware Addresses
-type OuiDb interface {
+// OuiDB represents a database that allow you to look up Hardware Addresses
+type OuiDB interface {
 	// Query the database for an entry based on the mac address
 	// If none are found ErrNotFound will be returned.
 	Query(string) (*Entry, error)
@@ -80,39 +80,49 @@ type OuiDb interface {
 	generatedAt(*time.Time)
 }
 
+type StaticDB interface {
+	OuiDB
+	RawGetter
+}
+
+type DynamicDB interface {
+	OuiDB
+	Updater
+}
+
 // Create a new dynamic database with optional content.
 // You can pass nil as parameter, which will initialize the database.
 // A database returned from this can be expected to implement the Updater interface.
-func newDynamic(c map[[3]byte]Entry) OuiDb {
+func newDynamic(c map[[3]byte]Entry) DynamicDB {
 	if c == nil {
 		c = make(map[[3]byte]Entry)
 	}
-	return &updateableDB{ouiDb: c}
+	return &updateableDB{ouiDB: c}
 }
 
 // Create a new static database with optional content.
 // You can pass nil as parameter, which will initialize the database.
 // A database returned from this can be expected to implement the RawGetter interface.
-func newStatic(c map[[3]byte]Entry) OuiDb {
+func newStatic(c map[[3]byte]Entry) StaticDB {
 	if c == nil {
 		c = make(map[[3]byte]Entry)
 	}
-	return &staticDB{ouiDb: c}
+	return &staticDB{ouiDB: c}
 }
 
 // A static database
 type staticDB struct {
-	ouiDb
+	ouiDB
 	dbTime time.Time
 }
 
 // Check we implement the interfaces we promise
-var _ OuiDb = &staticDB{}
+var _ OuiDB = &staticDB{}
 var _ RawGetter = staticDB{}
 
 // Satisfy the RawGetter interface
 func (db staticDB) RawDB() map[[3]byte]Entry {
-	return db.ouiDb
+	return db.ouiDB
 }
 
 // Query the database for an entry based on the mac address
@@ -128,7 +138,7 @@ func (db staticDB) Query(mac string) (*Entry, error) {
 // LookUp a hardware address and return the entry if any are found.
 // If none are found ErrNotFound will be returned.
 func (o staticDB) LookUp(hw HardwareAddr) (*Entry, error) {
-	e, ok := o.ouiDb[hw]
+	e, ok := o.ouiDB[hw]
 	if !ok {
 		return nil, ErrNotFound
 	}
@@ -151,14 +161,14 @@ func (d *staticDB) generatedAt(t *time.Time) {
 // An updateable database.
 // There is a mutex protecting read/write access to the database.
 type updateableDB struct {
-	ouiDb
+	ouiDB
 	dbTime time.Time
 	mu     sync.RWMutex
 }
 
 // Check we implement the interfaces we promise
 var _ Updater = &updateableDB{}
-var _ OuiDb = &updateableDB{}
+var _ OuiDB = &updateableDB{}
 
 // Query the database for an entry based on the mac address
 // If none are found ErrNotFound will be returned.
@@ -174,7 +184,7 @@ func (db *updateableDB) Query(mac string) (*Entry, error) {
 // If none are found ErrNotFound will be returned.
 func (o *updateableDB) LookUp(hw HardwareAddr) (*Entry, error) {
 	o.mu.RLock()
-	e, ok := o.ouiDb[hw]
+	e, ok := o.ouiDB[hw]
 	o.mu.RUnlock()
 	if !ok {
 		return nil, ErrNotFound
@@ -200,9 +210,9 @@ func (o *updateableDB) generatedAt(t *time.Time) {
 }
 
 // Update the database and replace content with the supplied content.
-func (o *updateableDB) updateDb(db ouiDb, t *time.Time) {
+func (o *updateableDB) updateDb(db ouiDB, t *time.Time) {
 	o.mu.Lock()
-	o.ouiDb = db
+	o.ouiDB = db
 	o.generatedAt(t)
 	o.mu.Unlock()
 }
@@ -210,7 +220,7 @@ func (o *updateableDB) updateDb(db ouiDb, t *time.Time) {
 // UpdateEntry will update/add a single entry to the database.
 func (o *updateableDB) UpdateEntry(hw HardwareAddr, e Entry) {
 	o.mu.Lock()
-	o.ouiDb.set(hw, e)
+	o.ouiDB.set(hw, e)
 	o.mu.Unlock()
 }
 
@@ -218,7 +228,7 @@ func (o *updateableDB) UpdateEntry(hw HardwareAddr, e Entry) {
 // If the element does not exist, the function will just return.
 func (o *updateableDB) DeleteEntry(hw HardwareAddr) {
 	o.mu.Lock()
-	o.ouiDb.del(hw)
+	o.ouiDB.del(hw)
 	o.mu.Unlock()
 }
 
@@ -232,11 +242,11 @@ type Updater interface {
 	// DeleteEntry will remove an entry from the database. If the element does not exist, nothing should happen
 	DeleteEntry(HardwareAddr)
 
-	updateDb(ouiDb, *time.Time)
+	updateDb(ouiDB, *time.Time)
 }
 
 // Read an oui file.
-func scanOUI(in io.Reader, db ouiDb) (*time.Time, error) {
+func scanOUI(in io.Reader, db ouiDB) (*time.Time, error) {
 	buffered := bufio.NewReader(in)
 	scanner := bufio.NewScanner(buffered)
 	re := regexp.MustCompile(`((?:(?:[0-9a-zA-Z]{2})[-:]){2,5}(?:[0-9a-zA-Z]{2}))(?:/(\w{1,2}))?`)
@@ -305,86 +315,105 @@ func scanOUI(in io.Reader, db ouiDb) (*time.Time, error) {
 const local = 0x020000
 const multicast = 0x010000
 
-// Open will read the content of the given reader and return a database with the content.
-// If you plan to update the database, specify that with the updateable parameter.
-func Open(in io.Reader, updateable bool) (OuiDb, error) {
+// OpenStatic will read the content of the given reader and return a database with the content.
+// You will not be able to update this database, but you can request the raw database
+// with the RawDB() function.
+func OpenStatic(in io.Reader) (StaticDB, error) {
 	dst := make(map[[3]byte]Entry)
-
-	var db OuiDb
-	if updateable {
-		db = newDynamic(dst)
-	} else {
-		db = newStatic(dst)
-	}
-	t, err := scanOUI(in, ouiDb(dst))
+	db := newStatic(dst)
+	t, err := scanOUI(in, ouiDB(dst))
 	db.generatedAt(t)
 	return db, err
 }
 
-// OpenFile will read the content of a oui.txt file and return a database with the content.
-// If you plan to update the database, specify that with the updateable parameter.
-func OpenFile(name string, updateable bool) (OuiDb, error) {
+// OpenStaticFile will read the content of a oui.txt file and return a database with the content.
+// You will not be able to update this database, but you can request the raw database
+// with the RawDB() function.
+func OpenStaticFile(name string) (StaticDB, error) {
 	dst := make(map[[3]byte]Entry)
 	file, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-
-	var db OuiDb
-	if updateable {
-		db = newDynamic(dst)
-	} else {
-		db = newStatic(dst)
-	}
-	t, err := scanOUI(file, ouiDb(dst))
+	db := newStatic(dst)
+	t, err := scanOUI(file, ouiDB(dst))
 	db.generatedAt(t)
 	return db, err
 }
 
-// OpenHttp will request the content of the URL given, parse it as a oui.txt file
+// OpenStaticHttp will request the content of the URL given, parse it as a oui.txt file
 // and return a database with the content.
-// If you plan to update the database, specify that with the updateable parameter.
-func OpenHttp(url string, updateable bool) (OuiDb, error) {
-	dst := make(ouiDb)
+// You will not be able to update this database, but you can request the raw database
+// with the RawDB() function.
+func OpenStaticHttp(url string) (StaticDB, error) {
+	dst := make(ouiDB)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var db OuiDb
-	if updateable {
-		db = newDynamic(dst)
-	} else {
-		db = newStatic(dst)
-	}
+	db := newStatic(dst)
 	t, err := scanOUI(resp.Body, dst)
 	db.generatedAt(t)
 	return db, err
 }
 
-// This error will be returned if you attempt to update a database,
-// where you didn't specify it as updateable.
-var ErrNotUpdateable = errors.New("database not updateable")
+// Open will read the content of the given reader and return a database with the content.
+// You can update the returned database using the Update/UpdateFile/UpdateHttp functions.
+func Open(in io.Reader) (DynamicDB, error) {
+	dst := make(map[[3]byte]Entry)
+	db := newDynamic(dst)
+	t, err := scanOUI(in, ouiDB(dst))
+	db.generatedAt(t)
+	return db, err
+}
+
+// OpenFile will read the content of a oui.txt file and return a database with the content.
+// You can update the returned database using the Update/UpdateFile/UpdateHttp functions.
+func OpenFile(name string) (DynamicDB, error) {
+	dst := make(map[[3]byte]Entry)
+	file, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	db := newDynamic(dst)
+	t, err := scanOUI(file, ouiDB(dst))
+	db.generatedAt(t)
+	return db, err
+}
+
+// OpenHttp will request the content of the URL given, parse it as a oui.txt file
+// and return a database with the content.
+// You can update the returned database using the Update/UpdateFile/UpdateHttp functions.
+func OpenHttp(url string) (DynamicDB, error) {
+	dst := make(ouiDB)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	db := newDynamic(dst)
+	t, err := scanOUI(resp.Body, dst)
+	db.generatedAt(t)
+	return db, err
+}
 
 // Update will read and replace the content of the database.
 // The database will remain usable while the update/parsing
 // is taking place.
 // If an error occurs during read or parsing, the database will not be replaced
 // and the previous version will continue to be served.
-func Update(db OuiDb, r io.Reader) error {
-	udb, ok := db.(Updater)
-	if !ok {
-		return ErrNotUpdateable
-	}
-
-	dst := make(ouiDb)
+func Update(db DynamicDB, r io.Reader) error {
+	dst := make(ouiDB)
 	t, err := scanOUI(r, dst)
 	if err != nil {
 		return err
 	}
-	udb.updateDb(dst, t)
+	db.updateDb(dst, t)
 	return nil
 }
 
@@ -393,23 +422,19 @@ func Update(db OuiDb, r io.Reader) error {
 // is taking place.
 // If an error occurs during read or parsing, the database will not be replaced
 // and the previous version will continue to be served.
-func UpdateFile(db OuiDb, name string) error {
-	udb, ok := db.(Updater)
-	if !ok {
-		return ErrNotUpdateable
-	}
+func UpdateFile(db DynamicDB, name string) error {
 	file, err := os.Open(name)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	dst := make(ouiDb)
+	dst := make(ouiDB)
 	t, err := scanOUI(file, dst)
 	if err != nil {
 		return err
 	}
-	udb.updateDb(dst, t)
+	db.updateDb(dst, t)
 	return nil
 }
 
@@ -418,28 +443,24 @@ func UpdateFile(db OuiDb, name string) error {
 // is taking place.
 // If an error occurs during read or parsing, the database will not be replaced
 // and the previous version will continue to be served.
-func UpdateHttp(db OuiDb, url string) error {
-	udb, ok := db.(Updater)
-	if !ok {
-		return ErrNotUpdateable
-	}
+func UpdateHttp(db DynamicDB, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	dst := make(ouiDb)
+	dst := make(ouiDB)
 	t, err := scanOUI(resp.Body, dst)
 	if err != nil {
 		return err
 	}
-	udb.updateDb(dst, t)
+	db.updateDb(dst, t)
 	return nil
 }
 
 // PrintDb the entire database to stdout.
-func PrintDb(db OuiDb) {
+func PrintDb(db OuiDB) {
 	var hw HardwareAddr
 	c := 0
 	t := time.Now()

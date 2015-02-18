@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var db oui.OuiDb
+var db oui.DynamicDB
 var UpdateAt *time.Time
 var mu sync.RWMutex
 var loadWait *sync.Cond
@@ -36,7 +36,7 @@ func start(c appengine.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	db, err = oui.Open(resp.Body, true)
+	db, err = oui.Open(resp.Body)
 
 	if err != nil {
 		c.Criticalf("Error parsing:%s", err.Error())
