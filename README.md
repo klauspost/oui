@@ -24,7 +24,7 @@ Download OUI database: http://standards.ieee.org/develop/regauth/oui/public.html
 [3]: https://travis-ci.org/klauspost/oui.svg
 [4]: https://travis-ci.org/klauspost/oui
 
-[Godoc reference](https://godoc.org/github.com/klauspost/oui).
+Click here for [Godoc reference](https://godoc.org/github.com/klauspost/oui), or see below for usage examples.
 
 # Usage
 
@@ -45,7 +45,7 @@ func main() {
 	// If error is nil, we have a result in "entry"
 }
 ```
-Note hat only the `D0-DF-9A` part of the MAC address is used. The parser is flexible, and will allow colons instead of dashes, or even no separator at all, so these strings will return the same results: `D0-DF-9A`, `D0:DF:9A` & `D0DF9A`. The only thing to note is that you cannot omit zeros, so `00-00-00` must be fully filled.
+Note that only the `D0-DF-9A` part of the MAC address is used. The parser is flexible, and will allow colons instead of dashes, or even no separator at all, so these strings will return the same results: `D0-DF-9A`, `D0:DF:9A` & `D0DF9A`. The only thing to note is that you cannot omit zeros, so `00-00-00` must be fully filled.
 
 When you initially load the database, you can specify that you want to be able to update it. Therefore this is safe:
 ```Go
