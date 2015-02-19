@@ -141,6 +141,11 @@ This version operates entirely from memory, and updates itself every 24 hours. T
 
 A docker repositry with the server can be found here: https://registry.hub.docker.com/u/klauspost/oui/
 
+To fetch the docker image, run:
+```docker pull klauspost/oui```
+To run the server with default options and expose it to port 5000, run:
+
+```docker run  -p 5000:5000 --rm klauspost/oui```
 
 # License
 
