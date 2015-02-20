@@ -206,13 +206,12 @@ func (o *updateableDB) Generated() time.Time {
 }
 
 // Update "generated at" time
+// Assumes updateableDB mutex is locked by caller.
 func (o *updateableDB) generatedAt(t *time.Time) {
 	if t == nil {
 		return
 	}
-	o.mu.Lock()
 	o.dbTime = *t
-	o.mu.Unlock()
 }
 
 // Update the database and replace content with the supplied content.
