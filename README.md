@@ -7,15 +7,11 @@ An Organizationally Unique Identifier (OUI) is a 24-bit number that uniquely ide
 
 These are purchased from the Institute of Electrical and Electronics Engineers, Incorporated (IEEE) Registration Authority by the "assignee" (IEEE term for the vendor, manufacturer, or other organization). They are used as the first portion of derivative identifiers to uniquely identify a particular piece of equipment as Ethernet MAC addresses, Subnetwork Access Protocol protocol identifiers, World Wide Names for Fibre Channel host bus adapters, and other Fibre Channel and Serial Attached SCSI devices.
 
-In MAC addresses, the OUI is combined with a 24-bit number (assigned by the owner or 'assignee' of the OUI) to form the address. The first three octets of the address are the OUI.
+In MAC addresses, the OUI is combined with a 24-bit number (assigned by the owner or 'assignee' of the OUI) to form the address. The first three octets of the address are the OUI. [See full article on Wikipedia](http://en.wikipedia.org/wiki/Organizationally_unique_identifier).
 
-[See full article on Wikipedia](http://en.wikipedia.org/wiki/Organizationally_unique_identifier)
-
-Package home: https://github.com/klauspost/oui
-
-App Engine Live Server: http://mac-oui.appspot.com/00-01-02
-
-Download OUI database: http://standards.ieee.org/develop/regauth/oui/public.html
+* Package home: https://github.com/klauspost/oui
+* App Engine Live Server: http://mac-oui.appspot.com/00-01-02
+* Download OUI database: http://standards.ieee.org/develop/regauth/oui/public.html
 
 # Documentation
 [![GoDoc][1]][2] [![Build Status][3]][4]
