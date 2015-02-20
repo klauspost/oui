@@ -1,0 +1,24 @@
+  Generated: Thu, 29 Jan 2015 00:39:43 -0500
+
+  OUI/MA-L      Organization
+  company_id      Organization
+          Address
+  
+  00-60-92   (hex)		MICRO/SYS, INC.
+  006092     (base 16)		MICRO/SYS, INC.
+  				3447 OCEAN VIEW BLVD.
+				GLENDALE CA 91208
+				UNITED STATES
+
+  00-60-93   (hex)		VARIAN
+  006093     (base 16)		VARIAN
+  				2700 MITCHELL DR.
+				WALNUT GREEK CA 94598
+				UNITED STATES
+
+  00-60-94   (hex)		IBM Corp - UPDATED
+  006094     (base 16)		IBM Corp
+  				3039 E Cornwallis Road
+				PO BOX 12195
+				Research Triangle Park NC 27709-2195
+				UNITED STATES
